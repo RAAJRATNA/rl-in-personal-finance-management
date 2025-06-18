@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Income{% endblock %}
+{% block content %}
+<h1>Income Tracking</h1>
+
+<form method="POST">
+  <label for="source">Source:</label>
+  <input type="text" name="source" required><br>
+  <label for="amount">Amount:</label>
+  <input type="number" name="amount" step="0.01" required><br>
+  <button type="submit">Add Income</button>
+</form>
+
+<h2>All Income Records</h2>
+<table>
+  <tr><th>Source</th><th>Amount</th><th>Date</th></tr>
+  {% for source, amount, date in incomes %}
+    <tr><td>{{ source }}</td><td>₹{{ amount }}</td><td>{{ date }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>RL Suggestion</h3>
+<ul>
+  <li><strong>Budget Category:</strong> {{ rl_recommendation.budget_category }}</li>
+  <li><strong>Action Code:</strong> {{ rl_recommendation.action }}</li>
+  <li><strong>Priority Goal:</strong> {{ rl_recommendation.priority_goal }}</li>
+  <li><strong>Suggestion:</strong> {{ rl_recommendation.suggestion }}</li>
+  {% if rl_recommendation.priority_goal == 'Increase Income' %}
+    <li style="color:orange"><strong>Tip:</strong> Consider ways to increase your income for better financial health.</li>
+  {% endif %}
+  {% if rl_recommendation.error %}
+    <li style="color:red"><strong>Error:</strong> {{ rl_recommendation.error }}</li>
+  {% endif %}
+</ul>
+{% endblock %}

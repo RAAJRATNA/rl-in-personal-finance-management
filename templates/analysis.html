@@ -1,0 +1,453 @@
+{% extends "base.html" %}
+{% block title %}Analysis{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Financial Analysis</h2>
+    
+    <!-- Financial Overview -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Financial Overview</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Income Analysis</h5>
+                            <p>Total Monthly Income: ₹{{ "{:,.2f}".format(income|default(0)) }}</p>
+                            <canvas id="incomeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Expense Analysis</h5>
+                            <p>Total Monthly Expenses: ₹{{ "{:,.2f}".format(expenses|default(0)) }}</p>
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Savings Analysis</h5>
+                            <p>Total Savings: ₹{{ "{:,.2f}".format(savings|default(0)) }}</p>
+                            <canvas id="savingsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Distribution -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Financial Distribution</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+                <div class="col-md-6">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goals Progress -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Goals Progress</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <canvas id="goalsChart"></canvas>
+                </div>
+                <div class="col-md-4">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Goal</th>
+                                    <th>Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for goal in goals %}
+                                <tr>
+                                    <td>{{ goal.goal }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ ((goal.saved|default(0))/(goal.target|default(1) * 100)|round|int) }}%">
+                                                {{ ((goal.saved|default(0))/(goal.target|default(1) * 100)|round|int) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RL Recommendations -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>AI-Powered Financial Recommendations</h3>
+        </div>
+        <div class="card-body">
+            {% if rl_recommendation %}
+            <div class="alert alert-info">
+                <h4>Financial Profile Analysis</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Current Status</h5>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item">
+                                <strong>Budget Category:</strong> 
+                                <span class="badge {% if rl_recommendation.budget_category == 'Aggressive Growth' %}bg-success
+                                                  {% elif rl_recommendation.budget_category == 'Balanced Growth' %}bg-warning
+                                                  {% else %}bg-info{% endif %}">
+                                    {{ rl_recommendation.budget_category }}
+                                </span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Priority Goal:</strong> {{ rl_recommendation.priority_goal }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Risk Assessment:</strong> {{ rl_recommendation.risk_assessment }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Detailed Analysis</h5>
+                        <ul class="list-group">
+                            {% for analysis in rl_recommendation.detailed_analysis %}
+                            <li class="list-group-item">{{ analysis }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <h5>Recommended Action Plan</h5>
+                <div class="card">
+                    <div class="card-body">
+                        <p class="lead">{{ rl_recommendation.suggestion }}</p>
+                        <ol class="list-group list-group-numbered">
+                            {% for action in rl_recommendation.action_plan %}
+                            <li class="list-group-item">{{ action }}</li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h5>Investment Strategy</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Short-term Goals (1-2 years)</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item">Build emergency fund</li>
+                                        <li class="list-group-item">Pay off high-interest debt</li>
+                                        <li class="list-group-item">Start SIP investments</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Long-term Goals (5+ years)</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item">Retirement planning</li>
+                                        <li class="list-group-item">Real estate investment</li>
+                                        <li class="list-group-item">Children's education</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h5>Risk Management</h5>
+                    <div class="alert alert-warning">
+                        <strong>Note:</strong> These recommendations are based on your current financial situation and market conditions. 
+                        Please consult with a financial advisor before making investment decisions.
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Insurance Coverage</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item">Health Insurance</li>
+                                        <li class="list-group-item">Term Life Insurance</li>
+                                        <li class="list-group-item">Critical Illness Cover</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Emergency Fund</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item">3-6 months of expenses</li>
+                                        <li class="list-group-item">Liquid investments</li>
+                                        <li class="list-group-item">Easy accessibility</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Debt Management</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item">High-interest debt first</li>
+                                        <li class="list-group-item">EMI optimization</li>
+                                        <li class="list-group-item">Credit score maintenance</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h5>Tax Planning</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Tax-Saving Investments</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item">ELSS Funds</li>
+                                        <li class="list-group-item">PPF</li>
+                                        <li class="list-group-item">NPS</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Deductions</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item">Section 80C</li>
+                                        <li class="list-group-item">HRA</li>
+                                        <li class="list-group-item">Medical Insurance</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Financial Goals Progress -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Financial Goals Progress</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Goal</th>
+                            <th>Target</th>
+                            <th>Saved</th>
+                            <th>Progress</th>
+                            <th>Deadline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for goal in goals %}
+                        <tr>
+                            <td>{{ goal.goal }}</td>
+                            <td>₹{{ "{:,.2f}".format(goal.target|default(0)) }}</td>
+                            <td>₹{{ "{:,.2f}".format(goal.saved|default(0)) }}</td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ ((goal.saved|default(0))/(goal.target|default(1) * 100)|round|int) }}%">
+                                        {{ ((goal.saved|default(0))/(goal.target|default(1) * 100)|round|int) }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ goal.deadline }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Initialize Charts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Income Chart
+    const incomeCtx = document.getElementById('incomeChart').getContext('2d');
+    new Chart(incomeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Salary', 'Investments', 'Other'],
+            datasets: [{
+                data: [70, 20, 10],
+                backgroundColor: ['#28a745', '#17a2b8', '#6c757d']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Expense Chart
+    const expenseCtx = document.getElementById('expenseChart').getContext('2d');
+    new Chart(expenseCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Housing', 'Food', 'Transport', 'Utilities', 'Entertainment'],
+            datasets: [{
+                data: [30, 25, 15, 20, 10],
+                backgroundColor: ['#dc3545', '#ffc107', '#28a745', '#17a2b8', '#6c757d']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Savings Chart
+    const savingsCtx = document.getElementById('savingsChart').getContext('2d');
+    new Chart(savingsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Current', 'Target'],
+            datasets: [{
+                label: 'Savings',
+                data: [{{ savings|default(0) }}, {{ income|default(0) * 0.3 }}],
+                backgroundColor: ['#17a2b8', '#28a745']
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Distribution Chart
+    const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+    new Chart(distributionCtx, {
+    type: 'pie',
+    data: {
+            labels: ['Income', 'Expenses', 'Savings'],
+            datasets: [{
+                data: [{{ income|default(0) }}, {{ expenses|default(0) }}, {{ savings|default(0) }}],
+                backgroundColor: ['#28a745', '#dc3545', '#17a2b8']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Trend Chart
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      datasets: [{
+                label: 'Income',
+                data: [{{ income|default(0) }}, {{ income|default(0) }}, {{ income|default(0) }}, 
+                       {{ income|default(0) }}, {{ income|default(0) }}, {{ income|default(0) }}],
+                borderColor: '#28a745',
+                fill: false
+            }, {
+        label: 'Expenses',
+                data: [{{ expenses|default(0) }}, {{ expenses|default(0) }}, {{ expenses|default(0) }}, 
+                       {{ expenses|default(0) }}, {{ expenses|default(0) }}, {{ expenses|default(0) }}],
+                borderColor: '#dc3545',
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Goals Chart
+    const goalsCtx = document.getElementById('goalsChart').getContext('2d');
+    new Chart(goalsCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for goal in goals %}'{{ goal.goal }}',{% endfor %}],
+            datasets: [{
+                label: 'Target',
+                data: [{% for goal in goals %}{{ goal.target|default(0) }},{% endfor %}],
+                backgroundColor: '#17a2b8'
+            }, {
+                label: 'Saved',
+                data: [{% for goal in goals %}{{ goal.saved|default(0) }},{% endfor %}],
+                backgroundColor: '#28a745'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+  });
+</script>
+{% endblock %}

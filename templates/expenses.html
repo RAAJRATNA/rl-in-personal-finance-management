@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Expenses - Finance AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+  <!-- 🌐 Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-left">Finance AI</div>
+    <ul class="nav-right">
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/expenses">Expenses</a></li>
+      <li><a href="/analysis">Analysis</a></li>
+      <li><a href="/stocks">Stock Suggestions</a></li>
+      <li><a href="/">Logout</a></li>
+    </ul>
+  </nav>
+
+  <!-- 💸 Expenses Content -->
+  <div class="container">
+    <h2>Track Your Expenses</h2>
+
+    <form method="POST">
+      <label>Category:</label>
+      <input type="text" name="category" required />
+
+      <label>Amount (₹):</label>
+      <input type="number" name="amount" step="0.01" required />
+
+      <button type="submit">Add Expense</button>
+    </form>
+
+    <h3>This Month's Total: ₹{{ total_monthly }}</h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Amount (₹)</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in expenses %}
+          <tr>
+            <td>{{ item[0] }}</td>
+            <td>{{ item[1] }}</td>
+            <td>{{ item[2] }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h3>RL Suggestion</h3>
+  <ul>
+    <li><strong>Budget Category:</strong> {{ rl_recommendation.budget_category }}</li>
+    <li><strong>Action Code:</strong> {{ rl_recommendation.action }}</li>
+    <li><strong>Priority Goal:</strong> {{ rl_recommendation.priority_goal }}</li>
+    <li><strong>Suggestion:</strong> {{ rl_recommendation.suggestion }}</li>
+    {% if rl_recommendation.daily_spend_limit > 0 %}
+    <li><strong>Daily Spend Limit:</strong> ₹{{ rl_recommendation.daily_spend_limit }}</li>
+    {% endif %}
+    {% if rl_recommendation.budget_category == 'Reduce Spending' %}
+      <li style="color:red"><strong>Warning:</strong> Your spending is above the recommended level!</li>
+    {% endif %}
+    {% if rl_recommendation.error %}
+      <li style="color:red"><strong>Error:</strong> {{ rl_recommendation.error }}</li>
+    {% endif %}
+  </ul>
+
+</body>
+</html>

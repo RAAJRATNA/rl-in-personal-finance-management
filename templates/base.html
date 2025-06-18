@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Finance AI{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Using url_for for static CSS only -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="nav-left">FINadviserRL</div>
+    <ul class="nav-right">
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/income">Income</a></li>
+      <li><a href="/expenses">Expenses</a></li>
+      <li><a href="/savings">Saving Goals</a></li>
+      <li><a href="/analysis">Analysis</a></li>
+      <li><a href="/stocks">Stocks</a></li>
+      <li><a href="/contact">Contact Us</a></li>
+      <li><button class="nav-clear-btn" onclick="confirmClearData()" title="Clear All Data">
+        <i class="fas fa-trash"></i> Clear
+      </button></li>
+      <li><a href="/logout" class="logout-link">Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Page Content -->
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    &copy; 2025 FINadviserRL. _roll.ex_.
+  </div>
+
+  <style>
+  .nav-clear-btn {
+    background-color: #dc3545;
+    border: 2px solid #dc3545;
+    color: white;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .nav-clear-btn:hover {
+    background-color: #c82333;
+    border-color: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+  }
+
+  .nav-clear-btn i {
+    font-size: 12px;
+  }
+
+  .modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+  }
+
+  .modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .modal-header {
+    background-color: #dc3545;
+    color: white;
+    padding: 20px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-body ul {
+    margin: 15px 0;
+    padding-left: 20px;
+  }
+
+  .modal-body li {
+    margin: 5px 0;
+  }
+
+  .modal-footer {
+    padding: 20px;
+    text-align: right;
+    border-top: 1px solid #eee;
+  }
+
+  .btn-cancel {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.3s;
+  }
+
+  .btn-cancel:hover {
+    background-color: #5a6268;
+  }
+
+  .btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .btn-danger:hover {
+    background-color: #c82333;
+  }
+
+  @media (max-width: 768px) {
+    .nav-clear-btn {
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+  }
+  </style>
+
+  <script>
+  function confirmClearData() {
+    if (window.confirm('Are you sure you want to clear ALL your financial data? This cannot be undone!')) {
+      // Make API call to clear data
+      fetch('/clear-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('All data has been cleared successfully!');
+          window.location.href = '/dashboard';
+        } else {
+          alert('Error clearing data: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        alert('Error clearing data: ' + error.message);
+      });
+    }
+  }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+{% block title %}Stocks{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Stock Analysis</h2>
+    
+    <!-- Market Status -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Market Status</h3>
+        </div>
+        <div class="card-body">
+            {% if market_status %}
+                <div class="alert {% if market_status.is_open %}alert-success{% else %}alert-warning{% endif %}">
+                    <h5>
+                        <i class="fas fa-clock"></i>
+                        Market Status: 
+                        <span class="badge {% if market_status.is_open %}bg-success{% else %}bg-warning{% endif %}">
+                            {% if market_status.is_open %}OPEN{% else %}CLOSED{% endif %}
+                        </span>
+                    </h5>
+                    <p class="mb-1"><strong>Current Time:</strong> {{ market_status.current_time }} ({{ market_status.timezone }})</p>
+                    {% if market_status.error %}
+                        <p class="mb-0 text-danger"><strong>Error:</strong> {{ market_status.error }}</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stock Search -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Live Stock Analysis</h3>
+        </div>
+        <div class="card-body">
+            <form id="stockSearchForm">
+                <div class="form-group">
+                    <label for="symbol">Stock Symbol (e.g., RELIANCE, TCS, HDFCBANK for Indian stocks)</label>
+                    <input type="text" class="form-control" id="symbol" name="symbol" placeholder="Enter stock symbol" required>
+                    <small class="form-text text-muted">For Indian stocks, you can use symbols like RELIANCE, TCS, HDFCBANK, INFY, etc.</small>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Analyze Stock
+                </button>
+            </form>
+            
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" style="display: none;" class="text-center mt-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Fetching live stock data...</p>
+            </div>
+            
+            <!-- Results container -->
+            <div id="stockResults" class="mt-4"></div>
+        </div>
+    </div>
+
+    <!-- Portfolio Analysis -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Advanced Portfolio Analysis</h3>
+        </div>
+        <div class="card-body">
+            {% if portfolio_analysis %}
+            <!-- Financial Health Status -->
+            <div class="alert {% if portfolio_analysis.financial_health.investment_readiness == 'ready' %}alert-success{% elif portfolio_analysis.financial_health.investment_readiness == 'borderline' %}alert-warning{% else %}alert-danger{% endif %} mb-4">
+                <h5><i class="fas fa-chart-line"></i> Financial Health Assessment</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Savings Rate:</strong> {{ "%.1f"|format(portfolio_analysis.financial_health.savings_rate) }}%
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Emergency Fund:</strong> {{ "%.1f"|format(portfolio_analysis.financial_health.emergency_fund_ratio) }}x monthly expenses
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Investment Readiness:</strong> 
+                        <span class="badge {% if portfolio_analysis.financial_health.investment_readiness == 'ready' %}bg-success{% elif portfolio_analysis.financial_health.investment_readiness == 'borderline' %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ portfolio_analysis.financial_health.investment_readiness.replace('_', ' ').title() }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment Strategy -->
+            {% if portfolio_analysis.strategy %}
+            <div class="alert alert-info mb-4">
+                <h5><i class="fas fa-lightbulb"></i> Investment Strategy</h5>
+                
+                {% if portfolio_analysis.strategy.priority_actions %}
+                <div class="mb-3">
+                    <strong>Priority Actions:</strong>
+                    <ul class="mb-0">
+                        {% for action in portfolio_analysis.strategy.priority_actions %}
+                        <li>{{ action }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                {% if portfolio_analysis.strategy.growth_opportunities %}
+                <div class="mb-3">
+                    <strong>Growth Opportunities:</strong>
+                    <ul class="mb-0">
+                        {% for opportunity in portfolio_analysis.strategy.growth_opportunities %}
+                        <li>{{ opportunity }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                {% if portfolio_analysis.strategy.risk_warnings %}
+                <div class="mb-3">
+                    <strong>Risk Warnings:</strong>
+                    <ul class="mb-0">
+                        {% for warning in portfolio_analysis.strategy.risk_warnings %}
+                        <li class="text-warning">{{ warning }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <div>
+                    <strong>Investment Timeline:</strong> 
+                    <span class="badge bg-primary">{{ portfolio_analysis.strategy.timeline.replace('_', ' ').title() }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="alert alert-info">
+                <h4>Personalized Investment Summary</h4>
+                <p>Based on your financial profile, here's your recommended investment strategy:</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Total Investment Capacity</h5>
+                        <h3 class="text-primary">₹{{ "{:,.2f}".format(portfolio_analysis.total_investable) }}</h3>
+                        <small class="text-muted">Safe amount you can invest without compromising financial security</small>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Recommended Allocation</h5>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ portfolio_analysis.allocation.stocks * 100 }}%">
+                                Stocks ({{ (portfolio_analysis.allocation.stocks * 100)|round|int }}%)
+                            </div>
+                        </div>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-info" role="progressbar" 
+                                 style="width: {{ portfolio_analysis.allocation.bonds * 100 }}%">
+                                Bonds ({{ (portfolio_analysis.allocation.bonds * 100)|round|int }}%)
+                            </div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: {{ portfolio_analysis.allocation.cash * 100 }}%">
+                                Cash ({{ (portfolio_analysis.allocation.cash * 100)|round|int }}%)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mt-4">Detailed Allocation</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Stocks</h6>
+                                <h4>₹{{ "{:,.2f}".format(portfolio_analysis.amounts.stocks) }}</h4>
+                                <small class="text-muted">{{ (portfolio_analysis.allocation.stocks * 100)|round|int }}% of portfolio</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Bonds</h6>
+                                <h4>₹{{ "{:,.2f}".format(portfolio_analysis.amounts.bonds) }}</h4>
+                                <small class="text-muted">{{ (portfolio_analysis.allocation.bonds * 100)|round|int }}% of portfolio</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Cash Reserve</h6>
+                                <h4>₹{{ "{:,.2f}".format(portfolio_analysis.amounts.cash) }}</h4>
+                                <small class="text-muted">{{ (portfolio_analysis.allocation.cash * 100)|round|int }}% of portfolio</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Emergency Fund</h6>
+                                <h4>₹{{ "{:,.2f}".format(portfolio_analysis.amounts.emergency_fund) }}</h4>
+                                <small class="text-muted">50% of total savings</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if portfolio_analysis.stock_allocations %}
+                <h5 class="mt-4">Recommended Stock Purchases</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Stock</th>
+                                <th>Shares</th>
+                                <th>Investment</th>
+                                <th>% of Stock Allocation</th>
+                                <th>Risk Level</th>
+                                <th>Expected Return</th>
+                                <th>Suitability</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock in portfolio_analysis.stock_allocations %}
+                            <tr>
+                                <td>{{ stock.name }} ({{ stock.symbol }})</td>
+                                <td>{{ stock.shares }}</td>
+                                <td>₹{{ "{:,.2f}".format(stock.investment) }}</td>
+                                <td>{{ stock.percentage|round|int }}%</td>
+                                <td>
+                                    <span class="badge {% if stock.risk_level == 'low' %}bg-success{% elif stock.risk_level == 'medium' %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ stock.risk_level|title }}
+                                    </span>
+                                </td>
+                                <td>{{ stock.expected_return }}%</td>
+                                <td>
+                                    <span class="badge {% if stock.suitability == 'excellent_fit' %}bg-success{% elif stock.suitability == 'good_fit' %}bg-info{% elif stock.suitability == 'moderate_fit' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                        {{ stock.suitability.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-warning mt-4">
+                    <h6>No Stock Recommendations</h6>
+                    <p>Based on your current financial situation, stock investments are not recommended at this time. Focus on building your emergency fund and improving your savings rate first.</p>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <h5>No Portfolio Data Available</h5>
+                <p>Please add your income, expenses, and savings data to get personalized investment recommendations.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Personalized Stock Recommendations -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Personalized Stock Recommendations</h3>
+        </div>
+        <div class="card-body">
+            {% if top_stocks %}
+            <div class="row">
+                {% for stock in top_stocks %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">{{ stock.name }}</h5>
+                                <span class="badge {% if stock.risk_level == 'low' %}bg-success
+                                                  {% elif stock.risk_level == 'medium' %}bg-warning
+                                                  {% else %}bg-danger{% endif %}">
+                                    {{ stock.risk_level|title }} Risk
+                                </span>
+                            </div>
+                            <h6 class="card-subtitle mb-2 text-muted">{{ stock.symbol }}</h6>
+                            
+                            <div class="row mt-3">
+                                <div class="col-6">
+                                    <p class="mb-1"><strong>Current Price:</strong></p>
+                                    <h4>₹{{ "%.2f"|format(stock.price) }}</h4>
+                                </div>
+                                <div class="col-6">
+                                    <p class="mb-1"><strong>Recommendation:</strong></p>
+                                    <span class="badge bg-success">{{ stock.recommendation }}</span>
+                                    <span class="badge bg-info">{{ (stock.confidence * 100)|round|int }}% Confidence</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <p class="mb-1"><strong>Key Metrics:</strong></p>
+                                <ul class="list-unstyled">
+                                    <li>RSI: {{ stock.rsi }}</li>
+                                    <li>Volatility: {{ (stock.volatility * 100)|round|int }}%</li>
+                                    <li>SMA (20): ₹{{ "%.2f"|format(stock.sma_20) }}</li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-3">
+                                <p class="mb-1"><strong>Minimum Investment:</strong></p>
+                                <h5>₹{{ "%.2f"|format(stock.min_investment) }}</h5>
+                            </div>
+
+                            <p class="mt-3">{{ stock.description }}</p>
+
+                            <button class="btn btn-primary mt-3" onclick="analyzeStock('{{ stock.symbol }}')">
+                                <i class="fas fa-chart-line"></i> View Live Analysis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <h5>No Stock Recommendations Available</h5>
+                <p>Please add your financial data to get personalized stock recommendations.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- RL Recommendations -->
+    {% if rl_recommendation %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>AI Investment Recommendations</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-primary">
+                <h5><i class="fas fa-robot"></i> AI Recommendation</h5>
+                <p><strong>Priority Goal:</strong> {{ rl_recommendation.priority_goal }}</p>
+                <p><strong>Budget Category:</strong> {{ rl_recommendation.budget_category }}</p>
+                {% if rl_recommendation.suggestion %}
+                <p><strong>Suggestion:</strong> {{ rl_recommendation.suggestion }}</p>
+                {% endif %}
+                {% if rl_recommendation.daily_spend_limit %}
+                <p><strong>Daily Spend Limit:</strong> ₹{{ rl_recommendation.daily_spend_limit }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.getElementById('stockSearchForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const symbol = document.getElementById('symbol').value.trim();
+    if (!symbol) {
+        alert('Please enter a stock symbol');
+        return;
+    }
+    
+    // Show loading indicator
+    document.getElementById('loadingIndicator').style.display = 'block';
+    document.getElementById('stockResults').innerHTML = '';
+    
+    // Make AJAX request
+    fetch('/stocks', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'symbol=' + encodeURIComponent(symbol)
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loadingIndicator').style.display = 'none';
+        
+        if (data.success) {
+            displayStockAnalysis(data.analysis);
+        } else {
+            displayError(data.error || 'Analysis failed');
+        }
+    })
+    .catch(error => {
+        document.getElementById('loadingIndicator').style.display = 'none';
+        displayError('Network error: ' + error.message);
+    });
+});
+
+function analyzeStock(symbol) {
+    document.getElementById('symbol').value = symbol;
+    document.getElementById('stockSearchForm').dispatchEvent(new Event('submit'));
+}
+
+function displayStockAnalysis(analysis) {
+    const resultsDiv = document.getElementById('stockResults');
+    
+    const html = `
+        <div class="card">
+            <div class="card-header">
+                <h4>Analysis for ${analysis.symbol}</h4>
+                <small class="text-muted">Last updated: ${analysis.last_updated}</small>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Current Status</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>Current Price:</strong> ₹${analysis.current_price}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Recommendation:</strong> 
+                                <span class="badge ${getBadgeClass(analysis.recommendation.action)}">
+                                    ${analysis.recommendation.action}
+                                </span>
+                                <span class="badge bg-info">${analysis.recommendation.confidence}% Confidence</span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Risk Level:</strong> 
+                                <span class="badge ${getRiskBadgeClass(analysis.recommendation.risk_level)}">
+                                    ${analysis.recommendation.risk_level.toUpperCase()}
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Technical Indicators</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>RSI:</strong> ${analysis.recommendation.metrics.rsi}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Volatility:</strong> ${analysis.recommendation.metrics.volatility}%
+                            </li>
+                            <li class="list-group-item">
+                                <strong>SMA (20):</strong> ₹${analysis.recommendation.metrics.sma_20}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>SMA (50):</strong> ₹${analysis.recommendation.metrics.sma_50}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>MACD:</strong> ${analysis.recommendation.metrics.macd}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Price Change:</strong> 
+                                <span class="${analysis.recommendation.metrics.price_change_pct >= 0 ? 'text-success' : 'text-danger'}">
+                                    ${analysis.recommendation.metrics.price_change_pct >= 0 ? '+' : ''}${analysis.recommendation.metrics.price_change_pct}%
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h5>Analysis Reasons</h5>
+                    <ul class="list-group">
+                        ${analysis.recommendation.reasons.map(reason => `<li class="list-group-item">${reason}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    resultsDiv.innerHTML = html;
+}
+
+function displayError(error) {
+    const resultsDiv = document.getElementById('stockResults');
+    resultsDiv.innerHTML = `
+        <div class="alert alert-danger">
+            <h5><i class="fas fa-exclamation-triangle"></i> Analysis Error</h5>
+            <p>${error}</p>
+            <p><small>Please check the stock symbol and try again. For Indian stocks, use symbols like RELIANCE, TCS, HDFCBANK, etc.</small></p>
+        </div>
+    `;
+}
+
+function getBadgeClass(action) {
+    switch(action) {
+        case 'BUY': return 'bg-success';
+        case 'SELL': return 'bg-danger';
+        default: return 'bg-warning';
+    }
+}
+
+function getRiskBadgeClass(risk) {
+    switch(risk) {
+        case 'low': return 'bg-success';
+        case 'medium': return 'bg-warning';
+        case 'high': return 'bg-danger';
+        default: return 'bg-secondary';
+    }
+}
+</script>
+{% endblock %}

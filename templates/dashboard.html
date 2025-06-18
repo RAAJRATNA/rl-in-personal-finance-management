@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+  <h1>Welcome to Finance Dashboard</h1>
+</div>
+
+<div class="cards">
+  <div class="card">This Month's Income: ₹{{ total_income }}</div>
+  <div class="card">This Month's Expenses: ₹{{ total_expense }}</div>
+  <div class="card">Savings: ₹{{ savings }}</div>
+  <div class="card">Manual Suggestion: Save ₹{{ ai_suggestion }}</div>
+</div>
+
+<hr>
+
+<h2>📊 AI-Powered RL Recommendations</h2>
+<div class="cards">
+  <div class="card">
+    <strong>Recommended Budget Category:</strong><br>
+    {{ rl_recommendation.budget_category }}
+  </div>
+  <div class="card">
+    <strong>Daily Spend Limit:</strong><br>
+    ₹{{ rl_recommendation.daily_spend_limit }}
+  </div>
+  <div class="card">
+    <strong>Priority Saving Goal:</strong><br>
+    {{ rl_recommendation.priority_goal }}
+  </div>
+</div>
+
+<h2>RL Recommendation</h2>
+<ul>
+    <li><strong>Budget Category:</strong> {{ rl_recommendation.budget_category }}</li>
+    <li><strong>Action Code:</strong> {{ rl_recommendation.action }}</li>
+    <li><strong>Priority Goal:</strong> {{ rl_recommendation.priority_goal }}</li>
+    <li><strong>Suggestion:</strong> {{ rl_recommendation.suggestion }}</li>
+    {% if rl_recommendation.daily_spend_limit > 0 %}
+    <li><strong>Daily Spend Limit:</strong> ₹{{ rl_recommendation.daily_spend_limit }}</li>
+    {% endif %}
+    {% if rl_recommendation.error %}
+    <li style="color:red"><strong>Error:</strong> {{ rl_recommendation.error }}</li>
+    {% endif %}
+</ul>
+
+<style>
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.btn-clear {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.btn-clear:hover {
+  background-color: #c82333;
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .btn-clear {
+    width: 100%;
+  }
+}
+</style>
+{% endblock %}

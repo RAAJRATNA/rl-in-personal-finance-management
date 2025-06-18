@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Saving Goals{% endblock %}
+{% block content %}
+<h2>Saving Goals</h2>
+
+<form method="POST">
+  <label>Goal Name:</label><br>
+  <input type="text" name="goal" required><br><br>
+
+  <label>Target Amount (₹):</label><br>
+  <input type="number" name="target" required><br><br>
+
+  <label>Already Saved (₹):</label><br>
+  <input type="number" name="saved" required><br><br>
+
+  <label>Deadline:</label><br>
+  <input type="date" name="deadline"><br><br>
+
+  <button type="submit">Add Goal</button>
+</form>
+
+<hr>
+
+<h3>Your Goals</h3>
+<table border="1">
+  <tr>
+    <th>Goal</th>
+    <th>Target</th>
+    <th>Saved</th>
+    <th>Deadline</th>
+    <th>Status</th>
+  </tr>
+  {% for goal, target, saved, deadline in savings %}
+  <tr>
+    <td>{{ goal }}</td>
+    <td>₹{{ target }}</td>
+    <td>
+  ₹{{ saved }}
+  <div style="background:#eee; width:100px; height:10px; border-radius:5px;">
+    <div style="background:#4caf50; width:{{ (saved|float / target|float) * 100 }}%; height:100%; border-radius:5px;"></div>
+  </div>
+</td>
+    <td>{{ deadline }}</td>
+    <td>
+      {% if saved|float >= target|float %}
+        ✅ Achieved
+      {% else %}
+        🕗 In Progress
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<hr>
+<h3>RL Suggestion</h3>
+<ul>
+  <li><strong>Budget Category:</strong> {{ rl_recommendation.budget_category }}</li>
+  <li><strong>Action Code:</strong> {{ rl_recommendation.action }}</li>
+  <li><strong>Priority Goal:</strong> {{ rl_recommendation.priority_goal }}</li>
+  <li><strong>Suggestion:</strong> {{ rl_recommendation.suggestion }}</li>
+  {% if rl_recommendation.error %}
+  <li style="color:red"><strong>Error:</strong> {{ rl_recommendation.error }}</li>
+  {% endif %}
+</ul>
+{% endblock %}
