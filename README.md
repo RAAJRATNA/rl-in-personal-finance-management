@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # FINadviserRL
 
 FINadviserRL is an AI-powered personal finance and investment assistant. It helps users manage income, expenses, savings goals, and investments with advanced features like:
@@ -11,3 +12,7 @@ FINadviserRL is an AI-powered personal finance and investment assistant. It help
 - Data privacy and backup features
 
 Start making smarter financial decisions with FINadviserRL! 
+=======
+# rl-in-personal-finance-management
+ FINadviserRL is an AI-powered personal finance app using reinforcement learning. Track income, expenses, savings, and investments—all in one place, with smart recommendations and live stock analysis to help you make better financial decisions.
+>>>>>>> b08ffb62bc339697b09d810350386d85242a7a62
